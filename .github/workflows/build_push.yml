@@ -107,7 +107,7 @@ jobs:
           path: app/build/reports/tests/testDebugUnitTest
 
       - name: Sign APK (Artifacts)
-        if: ${{ !startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animetail' }}
+        if: ${{ !startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animan' }}
         uses: r0adkll/sign-android-release@f30bdd30588842ac76044ecdbd4b6d0e3e813478
         with:
           releaseDirectory: app/build/outputs/apk/release
@@ -119,13 +119,13 @@ jobs:
           BUILD_TOOLS_VERSION: '35.0.1'
       
       - name: Upload APK
-        if: ${{ !startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animetail' }}
+        if: ${{ !startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animan' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: arm64-v8a-${{ github.sha }}
           path: app/build/outputs/apk/release/app-arm64-v8a-release-unsigned-signed.apk
       - name: Upload mapping
-        if: ${{ !startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animetail' }}
+        if: ${{ !startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animan' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: mapping-${{ github.sha }}
@@ -135,13 +135,13 @@ jobs:
 
       - name: Get tag name
 
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animetail'
+        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animan'
         run: |
           set -x
           echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
 
       - name: Sign APK
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animetail'
+        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animan'
         uses: r0adkll/sign-android-release@f30bdd30588842ac76044ecdbd4b6d0e3e813478
         with:
           releaseDirectory: app/build/outputs/apk/release
@@ -153,7 +153,7 @@ jobs:
           BUILD_TOOLS_VERSION: '35.0.1'
 
       - name: Clean up build artifacts
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animetail'
+        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animan'
         run: |
           set -e
 
@@ -178,11 +178,11 @@ jobs:
           echo "APK_X86_64_SHA=$sha" >> $GITHUB_ENV
 
       - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animetail'
+        if: startsWith(github.ref, 'refs/tags/') && github.repository == 'Biplab8/Animan'
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: ${{ env.VERSION_TAG }}
-          name: Animetail ${{ env.VERSION_TAG }}
+          name: Animan ${{ env.VERSION_TAG }}
           body: |
             ---
 
@@ -196,11 +196,11 @@ jobs:
             | x86 | ${{ env.APK_X86_SHA }}
             | x86_64 | ${{ env.APK_X86_64_SHA }} |
           files: |
-            animetail-${{ env.VERSION_TAG }}.apk
-            animetail-arm64-v8a-${{ env.VERSION_TAG }}.apk
-            animetail-armeabi-v7a-${{ env.VERSION_TAG }}.apk
-            animetail-x86-${{ env.VERSION_TAG }}.apk
-            animetail-x86_64-${{ env.VERSION_TAG }}.apk
+            animan-${{ env.VERSION_TAG }}.apk
+            animan-arm64-v8a-${{ env.VERSION_TAG }}.apk
+            animan-armeabi-v7a-${{ env.VERSION_TAG }}.apk
+            animan-x86-${{ env.VERSION_TAG }}.apk
+            animan-x86_64-${{ env.VERSION_TAG }}.apk
           draft: true
           prerelease: false
         env:
