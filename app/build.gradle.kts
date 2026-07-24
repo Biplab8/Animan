@@ -17,7 +17,7 @@ android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
-        applicationId = "com.biplab.animetailv2"
+        applicationId = "com.biplab.animan"
 
         versionCode = 1
         versionName = "0.1.0"
