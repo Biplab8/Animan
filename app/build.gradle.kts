@@ -185,6 +185,7 @@ dependencies {
     // TAIL
     implementation(projects.core.archive)
     implementation(projects.core.common)
+    implementation(projects.core.viewmodel)
     implementation(projects.coreMetadata)
     implementation(projects.sourceApi)
     implementation(projects.sourceLocal)
@@ -194,7 +195,7 @@ dependencies {
     implementation(projects.presentationWidget)
 
     // Compose
-    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidimplementation(projects.core.viewmodel)x.activity.compose)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.materialIcons)
@@ -217,6 +218,8 @@ dependencies {
     implementation(libs.bundles.kotlinx.coroutines)
 
     implementation(libs.sqldelight.async)
+
+    implementation(libs.kotlinx.datetime)
 
     // AndroidX libraries
     implementation(libs.androidx.annotation)
