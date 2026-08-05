@@ -336,11 +336,8 @@ class MangaViewModel(
         setRelatedMangasFetchedStatus(false)
 
         fun exceptionHandler(e: Throwable) {
-<<<<<<< HEAD:app/src/main/java/eu/kanade/tachiyomi/ui/entries/manga/MangaScreenModel.kt
         if (e is UnsupportedOperationException) return
-=======
             if (e is UnsupportedOperationException) return
->>>>>>> upstream/master:app/src/main/java/eu/kanade/tachiyomi/ui/entries/manga/MangaViewModel.kt
             logcat(LogPriority.ERROR, e)
             val message = with(context) { e.formattedMessage }
 
@@ -372,11 +369,6 @@ class MangaViewModel(
                 }
             }
         } catch (e: UnsupportedOperationException) {
-<<<<<<< HEAD:app/src/main/java/eu/kanade/tachiyomi/ui/entries/manga/MangaScreenModel.kt
-        // Ignore for sources that don't implement related manga
-=======
-            // Ignore for sources that don't implement related manga
->>>>>>> upstream/master:app/src/main/java/eu/kanade/tachiyomi/ui/entries/manga/MangaViewModel.kt
         } catch (e: Exception) {
             exceptionHandler(e)
         } finally {
