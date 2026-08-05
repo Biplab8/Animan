@@ -285,11 +285,8 @@ class MangaViewModel(
             observeTrackers()
 
             // Fetch info-chapters when needed
-<<<<<<< HEAD:app/src/main/java/eu/kanade/tachiyomi/ui/entries/manga/MangaScreenModel.kt
             if (screenModelScope.isActive) {
-=======
             if (viewModelScope.isActive) {
->>>>>>> upstream/master:app/src/main/java/eu/kanade/tachiyomi/ui/entries/manga/MangaViewModel.kt
                 if (needRefreshInfo || needRefreshChapter) {
                     fetchMangaAndChaptersFromSource()
                 }
