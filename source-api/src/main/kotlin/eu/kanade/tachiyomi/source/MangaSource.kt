@@ -83,10 +83,7 @@ interface MangaSource : Source {
     fun fetchPageList(chapter: SChapter): Observable<List<Page>> =
         throw IllegalStateException("Not used")
 
-        /**
-=======
     /**
-0
      * Fetches updated information for a manga.
      *
      * Depending on the provided flags or source availability, this may include
