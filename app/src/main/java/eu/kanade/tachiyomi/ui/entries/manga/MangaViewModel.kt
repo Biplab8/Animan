@@ -285,7 +285,6 @@ class MangaViewModel(
             observeTrackers()
 
             // Fetch info-chapters when needed
-            if (screenModelScope.isActive) {
             if (viewModelScope.isActive) {
                 if (needRefreshInfo || needRefreshChapter) {
                     fetchMangaAndChaptersFromSource()
@@ -333,7 +332,6 @@ class MangaViewModel(
         setRelatedMangasFetchedStatus(false)
 
         fun exceptionHandler(e: Throwable) {
-        if (e is UnsupportedOperationException) return
             if (e is UnsupportedOperationException) return
             logcat(LogPriority.ERROR, e)
             val message = with(context) { e.formattedMessage }
@@ -366,6 +364,7 @@ class MangaViewModel(
                 }
             }
         } catch (e: UnsupportedOperationException) {
+            // Ignore for sources that don't implement related manga
         } catch (e: Exception) {
             exceptionHandler(e)
         } finally {
@@ -391,51 +390,6 @@ class MangaViewModel(
     // KMK <--
 
     // Manga info - start
-
-        /**
-     * Fetch manga information and chapters from source using getMangaUpdate.
-     */
-    private suspend fun fetchMangaAndChaptersFromSource(manualFetch: Boolean = false) {
-        val state = successState ?: return
-        val source = sourceManager.get(state.manga.source) ?: state.source
-        if (source is StubMangaSource) return
-        try {
-            withIOContext {
-                val currentChapters = state.chapters.map { it.chapter.toSChapter() }
-                val mangaUpdate = source.getMangaUpdate(
-                    state.manga.toSManga(),
-                    currentChapters,
-                    fetchDetails = true,
-                    fetchChapters = true,
-                )
-
-                updateManga.awaitUpdateFromSource(state.manga, mangaUpdate.manga, manualFetch)
-
-                val newChapters = syncChaptersWithSource.await(
-                    mangaUpdate.chapters,
-                    state.manga,
-                    source,
-                    manualFetch,
-                )
-
-                if (manualFetch) {
-                    downloadNewChapters(newChapters)
-                }
-            }
-        } catch (e: Throwable) {
-            if (e is HttpException && e.code == 103) return
-            val message = if (e is NoChaptersException || e is UnsupportedOperationException) {
-                context.stringResource(MR.strings.no_chapters_error)
-            } else {
-                logcat(LogPriority.ERROR, e)
-                with(context) { e.formattedMessage }
-            }
-
-            screenModelScope.launch {
-                snackbarHostState.showSnackbar(message = message)
-            }
-        }
-    }
 
     /**
      * Fetch manga information and chapters from source using getMangaUpdate.
