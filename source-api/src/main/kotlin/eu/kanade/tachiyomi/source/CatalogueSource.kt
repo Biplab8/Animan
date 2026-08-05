@@ -88,11 +88,6 @@ interface CatalogueSource : MangaSource {
     fun fetchLatestUpdates(page: Int): Observable<MangasPage> =
         throw IllegalStateException("Not used")
 
-<<<<<<< HEAD:source-api/src/commonMain/kotlin/eu/kanade/tachiyomi/source/CatalogueSource.kt
-        @Suppress("DEPRECATION")
-=======
-    @Suppress("DEPRECATION")
->>>>>>> upstream/master:source-api/src/main/kotlin/eu/kanade/tachiyomi/source/CatalogueSource.kt
     override suspend fun getMangaUpdate(
         manga: SManga,
         chapters: List<SChapter>,
@@ -103,11 +98,7 @@ interface CatalogueSource : MangaSource {
         val asyncChapters = if (fetchChapters) async { getChapterList(manga) } else null
         SMangaUpdate(asyncManga?.await() ?: manga, asyncChapters?.await() ?: chapters)
     }
-<<<<<<< HEAD:source-api/src/commonMain/kotlin/eu/kanade/tachiyomi/source/CatalogueSource.kt
     
-=======
-
->>>>>>> upstream/master:source-api/src/main/kotlin/eu/kanade/tachiyomi/source/CatalogueSource.kt
     // KMK -->
 
     /**
