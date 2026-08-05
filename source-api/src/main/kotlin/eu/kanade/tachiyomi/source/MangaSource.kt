@@ -83,11 +83,10 @@ interface MangaSource : Source {
     fun fetchPageList(chapter: SChapter): Observable<List<Page>> =
         throw IllegalStateException("Not used")
 
-<<<<<<< HEAD:source-api/src/commonMain/kotlin/eu/kanade/tachiyomi/source/MangaSource.kt
         /**
 =======
     /**
->>>>>>> upstream/master:source-api/src/main/kotlin/eu/kanade/tachiyomi/source/MangaSource.kt
+0
      * Fetches updated information for a manga.
      *
      * Depending on the provided flags or source availability, this may include
@@ -110,11 +109,7 @@ interface MangaSource : Source {
         val updatedChapters = if (fetchChapters) getChapterList(manga) else chapters
         return SMangaUpdate(updatedManga, updatedChapters)
     }
-<<<<<<< HEAD:source-api/src/commonMain/kotlin/eu/kanade/tachiyomi/source/MangaSource.kt
-    
-=======
 
->>>>>>> upstream/master:source-api/src/main/kotlin/eu/kanade/tachiyomi/source/MangaSource.kt
     // KMK -->
 
     /**
