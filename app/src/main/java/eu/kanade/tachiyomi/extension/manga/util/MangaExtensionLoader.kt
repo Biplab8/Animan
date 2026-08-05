@@ -510,16 +510,4 @@ internal object MangaExtensionLoader {
             is MangaSource -> listOf(obj)
             is Source -> listOf(obj as MangaSource)
             is SourceFactory -> obj.createSources().filterIsInstance<MangaSource>()
-            else -> throw Exception("Unknown source class type: ${obj?.javaClass}")
-        }
-    }
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> upstream/master
-    private data class MangaExtensionInfo(
-        val packageInfo: PackageInfo,
-        val isShared: Boolean,
-    )
-}
+            else -> throw Exce
