@@ -34,7 +34,11 @@ class ChildFirstPathClassLoader(
                 c = super.loadClass(name, resolve)
             } catch (_: ClassNotFoundException) {}
         }
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> upstream/master
         if (c == null) {
             c = try {
                 findClass(name)
@@ -64,7 +68,11 @@ class ChildFirstPathClassLoader(
             name.startsWith("android.") ||
             name.startsWith("androidx.")
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> upstream/master
     override fun getResource(name: String?): URL? {
         return systemClassLoader?.getResource(name)
             ?: findResource(name)

@@ -9,6 +9,8 @@ import eu.kanade.tachiyomi.data.backup.models.BackupChapter
 import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.BackupManga
 import eu.kanade.tachiyomi.data.backup.models.BackupTracking
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import tachiyomi.data.Database
 import tachiyomi.data.MangaUpdateStrategyColumnAdapter
 import tachiyomi.data.MemoColumnAdapter
@@ -25,9 +27,9 @@ import tachiyomi.domain.track.manga.interactor.InsertMangaTrack
 import tachiyomi.domain.track.manga.model.MangaTrack
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.time.ZonedDateTime
 import java.util.Date
 import kotlin.math.max
+import kotlin.time.Clock
 
 class MangaRestorer(
     private var isSync: Boolean = false,
@@ -41,13 +43,9 @@ class MangaRestorer(
     private val insertTrack: InsertMangaTrack = Injekt.get(),
     fetchInterval: MangaFetchInterval = Injekt.get(),
 ) {
-    private var now = ZonedDateTime.now()
-    private var currentFetchWindow = fetchInterval.getWindow(now)
-
-    init {
-        now = ZonedDateTime.now()
-        currentFetchWindow = fetchInterval.getWindow(now)
-    }
+    private val timeZone = TimeZone.currentSystemDefault()
+    private val now = Clock.System.now().toLocalDateTime(timeZone)
+    private val currentFetchWindow = fetchInterval.getWindow(now.date, timeZone)
 
     suspend fun sortByNew(backupMangas: List<BackupManga>): List<BackupManga> {
         val urlsBySource = handler.awaitList { mangasQueries.getAllMangaSourceAndUrl() }
@@ -304,9 +302,9 @@ class MangaRestorer(
         restoreCategories(manga, categories, backupCategories)
         restoreChapters(manga, chapters)
         restoreTracking(manga, tracks)
-        restoreHistory(history)
+        restoreHistory(manga, history)
         restoreExcludedScanlators(manga, excludedScanlators)
-        updateManga.awaitUpdateFetchInterval(manga, now, currentFetchWindow)
+        updateManga.awaitUpdateFetchInterval(manga, timeZone, now, currentFetchWindow)
         return manga
     }
 
@@ -344,13 +342,17 @@ class MangaRestorer(
         }
     }
 
-    private suspend fun restoreHistory(backupHistory: List<BackupHistory>) {
+    private suspend fun restoreHistory(manga: Manga, backupHistory: List<BackupHistory>) {
         val toUpdate = backupHistory.mapNotNull { history ->
-            val dbHistory = handler.awaitOneOrNull { historyQueries.getHistoryByChapterUrl(history.url) }
+            val dbHistory = handler.awaitOneOrNull {
+                historyQueries.getHistoryByChapterUrlAndMangaId(history.url, manga.id)
+            }
             val item = history.getHistoryImpl()
 
             if (dbHistory == null) {
-                val chapter = handler.awaitOneOrNull { chaptersQueries.getChapterByUrl(history.url) }
+                val chapter = handler.awaitOneOrNull {
+                    chaptersQueries.getChapterByUrlAndMangaId(history.url, manga.id)
+                }
                 return@mapNotNull if (chapter == null) {
                     // Chapter doesn't exist; skip
                     null

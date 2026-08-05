@@ -19,8 +19,13 @@ android {
     defaultConfig {
         applicationId = "com.biplab.animan"
 
+<<<<<<< HEAD
         versionCode = 1
         versionName = "0.1.0"
+=======
+        versionCode = 143
+        versionName = "0.20.3.0"
+>>>>>>> upstream/master
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getLatestCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getLatestCommitSha()}\"")

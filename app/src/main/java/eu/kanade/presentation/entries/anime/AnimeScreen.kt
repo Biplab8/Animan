@@ -93,8 +93,8 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadProvider
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.source.anime.getNameForAnimeInfo
 import eu.kanade.tachiyomi.ui.browse.anime.extension.details.AnimeSourcePreferencesScreen
-import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreenModel
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeSeasonItem
+import eu.kanade.tachiyomi.ui.entries.anime.AnimeViewModel
 import eu.kanade.tachiyomi.ui.entries.anime.EpisodeList
 import eu.kanade.tachiyomi.ui.home.HomeScreen.uiPreferences
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -121,13 +121,13 @@ import tachiyomi.source.local.entries.anime.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
-import java.time.Instant
 import java.util.concurrent.TimeUnit
+import kotlin.time.Instant
 
 @Composable
 @Suppress("ParameterNaming", "LongMethod")
 fun AnimeScreen(
-    state: AnimeScreenModel.State.Success,
+    state: AnimeViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
     nextUpdate: Instant?,
     isTabletUi: Boolean,
@@ -327,7 +327,7 @@ fun AnimeScreen(
 @Composable
 @Suppress("ParameterNaming", "LongMethod")
 private fun AnimeScreenSmallImpl(
-    state: AnimeScreenModel.State.Success,
+    state: AnimeViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
     nextUpdate: Instant?,
     episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,
@@ -797,7 +797,7 @@ private fun AnimeScreenSmallImpl(
 @Composable
 @Suppress("ParameterNaming", "LongMethod")
 fun AnimeScreenLargeImpl(
-    state: AnimeScreenModel.State.Success,
+    state: AnimeViewModel.State.Success,
     snackbarHostState: SnackbarHostState,
     nextUpdate: Instant?,
     episodeSwipeStartAction: LibraryPreferences.EpisodeSwipeAction,

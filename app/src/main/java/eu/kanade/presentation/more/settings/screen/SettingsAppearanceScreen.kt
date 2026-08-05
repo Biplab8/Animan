@@ -25,6 +25,9 @@ import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageScreen
 import eu.kanade.presentation.more.settings.widget.AppThemeModePreferenceWidget
 import eu.kanade.presentation.more.settings.widget.AppThemePreferenceWidget
 import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toJavaLocalDateTime
+import kotlinx.datetime.toLocalDateTime
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.i18n.tail.TLMR
@@ -32,7 +35,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.time.LocalDate
+import kotlin.time.Clock
 
 object SettingsAppearanceScreen : SearchableSettings {
 
@@ -188,7 +191,7 @@ object SettingsAppearanceScreen : SearchableSettings {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
 
-        val now = remember { LocalDate.now() }
+        val now = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).toJavaLocalDateTime() }
 
         val dateFormat by uiPreferences.dateFormat.collectAsState()
         val formattedNow = remember(dateFormat) {
@@ -228,8 +231,12 @@ object SettingsAppearanceScreen : SearchableSettings {
                     entries = NavStyle.entries
                         .associateWith { stringResource(it.titleRes) }
                         .toMap(),
-                    title = "Navigation Style",
+                    title = stringResource(MR.strings.pref_navigation_style),
                     onValueChanged = { true },
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.showHomeTab,
+                    title = stringResource(MR.strings.pref_show_home_tab),
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = uiPreferences.dateFormat,

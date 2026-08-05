@@ -84,7 +84,7 @@ fun FeedScreen(
         state.isLoading -> LoadingScreen()
 
         state.isEmpty -> EmptyScreen(
-            TLMR.strings.feed_tab_empty,
+            stringRes = TLMR.strings.feed_tab_empty,
             modifier = Modifier.padding(contentPadding),
         )
 

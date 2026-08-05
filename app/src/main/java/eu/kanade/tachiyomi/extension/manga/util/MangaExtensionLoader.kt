@@ -513,7 +513,11 @@ internal object MangaExtensionLoader {
             else -> throw Exception("Unknown source class type: ${obj?.javaClass}")
         }
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> upstream/master
     private data class MangaExtensionInfo(
         val packageInfo: PackageInfo,
         val isShared: Boolean,

@@ -12,6 +12,39 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 
 ## [Unreleased]
 ### Added
+- Add Category filtering for the Updates tab ([@MajorTanya](https://github.com/MajorTanya)) ([#3589](https://github.com/mihonapp/mihon/pull/3589))
+- Add Category filtering for the Upcoming calendar ([@MajorTanya](https://github.com/MajorTanya)) ([#3607](https://github.com/mihonapp/mihon/pull/3607))
+
+### Changed
+- Update default user agent to Chrome 149 ([@AntsyLich](https://github.com/AntsyLich)) ([#3678](https://github.com/mihonapp/mihon/pull/3678))
+
+### Improved
+- Spoof `Sec-CH-UA` client hints in WebView to match the user agent ([@AntsyLich](https://github.com/AntsyLich)) ([#3678](https://github.com/mihonapp/mihon/pull/3678))
+
+### Fixed
+- Fixed extension installation with shizuku installer ([@NGB-Was-Taken](https://github.com/NGB-Was-Taken)) ([#3676](https://github.com/mihonapp/mihon/pull/3676))
+- Fixed `X-Requested-With` spoofing leaking to unrelated callers ([@AntsyLich](https://github.com/AntsyLich)) ([#3678](https://github.com/mihonapp/mihon/pull/3678))
+- Fixed reader loading indefinitely in some scenarios ([@AntsyLich](https://github.com/AntsyLich)) ([#3686](https://github.com/mihonapp/mihon/pull/3686))
+
+## [v0.20.2] - 2026-08-01
+### Added
+- Add Tokyo Night Theme ([@xMohnad](https://github.com/xMohnad)) ([#3502](https://github.com/mihonapp/mihon/pull/3502))
+
+### Changed
+- Detect Shizuku with permission check ([@Small-Ku](https://github.com/Small-Ku)) ([#3565](https://github.com/mihonapp/mihon/pull/3565))
+
+### Improved
+- Library search ([@NGB-Was-Taken](https://github.com/NGB-Was-Taken)) ([#3554](https://github.com/mihonapp/mihon/pull/3554))
+  - Support logical operators (`&&`, `||`, `-`), implicit `AND` separators, and nested expressions with `()`
+  - Add comparison operators (`>`, `>=`, `<`, `<=`, `=`) for `id`, `added`, `fetchinterval` / `fi`, `nextupdate` / `nu`, `unread`, `read`, and `total` (Uses `yyyy-MM-dd` dates for `added` and `nextupdate`)
+  - Support field-specific prefixes (`title`, `author`, `artist`, `description` / `desc`, `genre` / `tag`, `source` / `src`, `source_id` / `src_id`, `notes` / `note`, `language` / `lang`) and empty field matching (`""`, `''`)
+- Always use Private installer to update privately installed extensions ([@MajorTanya](https://github.com/MajorTanya)) ([#3614](https://github.com/mihonapp/mihon/pull/3614))
+
+### Fixed
+- Fixed app bars remaining visible after changing pages by tapping in the paged reader after using the chapter navigator slider ([@AntsyLich](https://github.com/AntsyLich)) ([#3567](https://github.com/mihonapp/mihon/pull/3567))
+- Fixed MangaBaka User Agent string ([@MajorTanya](https://github.com/MajorTanya)) ([#3578](https://github.com/mihonapp/mihon/pull/3578))
+- Fixed extension installation with shizuku installer ([@NGB-Was-Taken](https://github.com/NGB-Was-Taken)) ([#3630](https://github.com/mihonapp/mihon/pull/3630))
+- Fixed backup restore dropping library entries when the backup contains duplicate chapters ([@na-ji](https://github.com/na-ji)) ([#3667](https://github.com/mihonapp/mihon/pull/3667))
 - [Hikka](https://hikka.io/) tracker support ([@Lorg0n](https://github.com/Lorg0n)) ([#1386](https://github.com/mihonapp/mihon/pull/1386))
   - Fix Hikka not defaulting to "Plan to Read" for unread titles ([@MajorTanya](https://github.com/MajorTanya)) ([#3534](https://github.com/mihonapp/mihon/pull/3534))
   - Fix Hikka search throwing error due to unclosed response ([@MajorTanya](https://github.com/MajorTanya)) ([#3548](https://github.com/mihonapp/mihon/pull/3548))
@@ -23,6 +56,9 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - Add support for `tachiyomix` 1.6 extensions ([@AntsyLich](https://github.com/AntsyLich))
 - Add support for `tachiyomix` extension index format ([@AntsyLich](https://github.com/AntsyLich)) ([#3349](https://github.com/mihonapp/mihon/pull/3349))
 - Added a description for the horizontal seek gesture setting ([@kenkoro](https://github.com/kenkoro)) ([#2224](https://github.com/aniyomiorg/aniyomi/pull/2224))
+- Added an http server for use in extensions ([@Secozzi](https://github.com/Secozzi)) ([#2348](https://github.com/aniyomiorg/aniyomi/pull/2348))
+- Added support for thumbnail preview when seeking ([@Secozzi](https://github.com/Secozzi)) ([#2343](https://github.com/aniyomiorg/aniyomi/pull/2343))
+- Add torrent streaming support ([@Secozzi](https://github.com/Secozzi)) ([#2346](https://github.com/aniyomiorg/aniyomi/pull/2346))
 - Add vertical chapter navigator for long strip mode ([@AntsyLich](https://github.com/AntsyLich)) ([#3377](https://github.com/mihonapp/mihon/pull/3377))
 - Add setting to control vertical chapter navigator height ([@AntsyLich](https://github.com/AntsyLich)) ([#3528](https://github.com/mihonapp/mihon/pull/3528))
 - Add option to set which readers use vertical chapter navigator ([@AntsyLich](https://github.com/AntsyLich)) ([#3528](https://github.com/mihonapp/mihon/pull/3528))
@@ -41,6 +77,7 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - Fix crash when putting app in background ([@AntsyLich](https://github.com/AntsyLich)) ([#3523](https://github.com/mihonapp/mihon/pull/3523))
 - Fixed player crash when running out of available videos ([@Secozzi](https://github.com/Secozzi)) ([#150](https://github.com/quickdesh/Animiru/pull/150))
 - Swapped keyEvent listeners for left and right keyboard arrow keys as they were swapped in the code causing the opposite of the desired behavior([@alphastark](https://github.com/alphastark)) ([#2219](https://github.com/aniyomiorg/aniyomi/issues/2219))
+- Fix some malformed translated strings that made the player quit when Aniskip was enabled ([@686udjie](https://github.com/686udjie)) ([#2217](https://github.com/aniyomiorg/aniyomi/pull/2217))
 - Fix support for non-system SAF providers ([@AntsyLich](https://github.com/AntsyLich)) ([#3530](https://github.com/mihonapp/mihon/pull/3530))
 - Fix chapter's `memo` field not being updated for existing chapters ([@cuong-tran](https://github.com/cuong-tran)) ([#3538](https://github.com/mihonapp/mihon/pull/3538))
 - Fix app not reading `tachiyomix.extensionLib` extension metadata ([@AntsyLich](https://github.com/AntsyLich)) ([#3545](https://github.com/mihonapp/mihon/pull/3545), [#3559](https://github.com/mihonapp/mihon/pull/3559))
@@ -158,7 +195,6 @@ Same as v0.19.6
 - Fix extension install/update stuck at pending ([@AntsyLich](https://github.com/AntsyLich)) ([#3000](https://github.com/mihonapp/mihon/pull/3000))
 - Fix crash when downloading multiple chapters with Arabic locale ([@MajorTanya](https://github.com/MajorTanya)) ([#2676](https://github.com/mihonapp/mihon/pull/2676))
 
-## [v0.18.1.4] - 2025-10-28
 ## [v0.18.1.2] - 2025-10-28
 ### Fixed
 
@@ -554,7 +590,12 @@ Same as v0.19.6
 - Branding to Mihon ([@AntsyLich](https://github.com/AntsyLich))
 - Minimum supported Android version to 8 ([@AntsyLich](https://github.com/AntsyLich)) ([`dfb3091`](https://github.com/mihonapp/mihon/commit/dfb3091e380dda3e9bfb64bf5c9a685cf3a03d0e))
 
-[unreleased]: https://github.com/mihonapp/mihon/compare/v0.19.7...main
+[unreleased]: https://github.com/mihonapp/mihon/compare/v0.20.2...main
+[v0.20.2]: https://github.com/mihonapp/mihon/compare/v0.20.1...v0.20.2
+[v0.20.1]: https://github.com/mihonapp/mihon/compare/v0.20.0...v0.20.1
+[v0.20.0]: https://github.com/mihonapp/mihon/compare/v0.19.9...v0.20.0
+[v0.19.9]: https://github.com/mihonapp/mihon/compare/v0.19.8...v0.19.9
+[v0.19.8]: https://github.com/mihonapp/mihon/compare/v0.19.7...v0.19.8
 [v0.19.7]: https://github.com/mihonapp/mihon/compare/v0.19.6...v0.19.7
 [v0.19.6]: https://github.com/mihonapp/mihon/compare/v0.19.5...v0.19.6
 [v0.19.5]: https://github.com/mihonapp/mihon/compare/v0.19.4...v0.19.5

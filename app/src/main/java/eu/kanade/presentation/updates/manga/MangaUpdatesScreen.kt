@@ -18,21 +18,21 @@ import eu.kanade.presentation.entries.components.EntryBottomActionMenu
 import eu.kanade.presentation.entries.manga.components.ChapterDownloadAction
 import eu.kanade.tachiyomi.data.download.manga.model.MangaDownload
 import eu.kanade.tachiyomi.ui.updates.manga.MangaUpdatesItem
-import eu.kanade.tachiyomi.ui.updates.manga.MangaUpdatesScreenModel
+import eu.kanade.tachiyomi.ui.updates.manga.MangaUpdatesViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
-import java.time.LocalDate
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun MangaUpdateScreen(
-    state: MangaUpdatesScreenModel.State,
+    state: MangaUpdatesViewModel.State,
     snackbarHostState: SnackbarHostState,
     lastUpdated: Long,
     onClickCover: (MangaUpdatesItem) -> Unit,
