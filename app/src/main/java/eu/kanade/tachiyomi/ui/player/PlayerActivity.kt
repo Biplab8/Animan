@@ -29,6 +29,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.content.res.AssetManager
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.media.AudioManager
@@ -63,6 +64,7 @@ import eu.kanade.domain.connections.service.ConnectionsPreferences
 import eu.kanade.presentation.theme.TachiyomiTheme
 import eu.kanade.tachiyomi.animesource.model.ChapterType
 import eu.kanade.tachiyomi.animesource.model.Hoster
+import eu.kanade.tachiyomi.animesource.model.HttpServer
 import eu.kanade.tachiyomi.animesource.model.SerializableHoster.Companion.serialize
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
@@ -110,9 +112,13 @@ import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.util.Calendar
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.time.Duration.Companion.seconds
 
 class PlayerActivity : BaseActivity() {
     private val viewModel by viewModels<PlayerViewModel>(factoryProducer = { PlayerViewModelProviderFactory(this) })
@@ -146,6 +152,7 @@ class PlayerActivity : BaseActivity() {
     }
 
     private var pipReceiver: BroadcastReceiver? = null
+    private var httpServer: HttpServer? = null
 
     private val noisyReceiver = object : BroadcastReceiver() {
         var initialized = false
@@ -344,6 +351,9 @@ class PlayerActivity : BaseActivity() {
     override fun onDestroy() {
         player.isExiting = true
 
+        httpServer?.stop()
+        httpServer = null
+
         audioFocusRequest?.let {
             AudioManagerCompat.abandonAudioFocusRequest(audioManager, it)
         }
@@ -492,6 +502,8 @@ class PlayerActivity : BaseActivity() {
         val mpvInputFile = mpvDir.createFile("input.conf")!!
         advancedPlayerPreferences.mpvInput().get().let { mpvInputFile.writeText(it) }
 
+        copyAssets(mpvDir)
+
         val showBlackBars = if (subtitlePreferences.subtitleBlackBars().get()) "yes" else "no"
         mpv.setOptionString("sub-ass-force-margins", showBlackBars)
         mpv.setOptionString("sub-use-margins", showBlackBars)
@@ -500,6 +512,31 @@ class PlayerActivity : BaseActivity() {
 
         mpv.addLogObserver(playerObserver)
         mpv.addObserver(playerObserver)
+    }
+
+    private fun copyAssets(mpvDir: UniFile) {
+        val assetManager = assets
+        val files = arrayOf("subfont.ttf", "cacert.pem")
+        for (filename in files) {
+            var ins: InputStream? = null
+            var out: OutputStream? = null
+            try {
+                ins = assetManager.open(filename, AssetManager.ACCESS_STREAMING)
+                val outFile = mpvDir.createFile(filename)!!
+                // Skip if the file already exists with the same size
+                if (outFile.length() == ins.available().toLong()) {
+                    continue
+                }
+                out = outFile.openOutputStream()
+                ins.copyTo(out)
+                logcat(LogPriority.WARN) { "Copied asset file: $filename" }
+            } catch (e: IOException) {
+                logcat(LogPriority.ERROR, e) { "Failed to copy asset file: $filename" }
+            } finally {
+                ins?.close()
+                out?.close()
+            }
+        }
     }
 
     private fun setupPlayerAudio() {
@@ -1081,6 +1118,8 @@ class PlayerActivity : BaseActivity() {
     fun setVideo(video: Video?, position: Long? = null) {
         if (player.isExiting) return
         if (video == null) return
+        httpServer?.stop()
+        httpServer = null
 
         setHttpOptions(video)
 
@@ -1117,13 +1156,35 @@ class PlayerActivity : BaseActivity() {
                 torrentLinkHandler(video.videoUrl, video.videoTitle, videoOptions)
             }
         } else {
-            mpv.command(
-                "loadfile",
-                parseVideoUrl(video.videoUrl) ?: return,
-                "replace",
-                "0",
-                videoOptions,
-            )
+            lifecycleScope.launchIO {
+                val httpSource = viewModel.currentSource.value as? AnimeHttpSource
+                var videoUrl: String = video.videoUrl
+                if (video.usesHttpServer() && httpSource != null) {
+                    val port = try {
+                        httpServer = httpSource.createHttpServer()
+                        httpServer?.start()
+                        httpServer?.listeningPort ?: 0
+                    } catch (e: Exception) {
+                        logcat(LogPriority.ERROR, e) { "Failed to start http server" }
+                        launchUI {
+                            toast(AYMR.strings.http_server_start_failure)
+                        }
+                        return@launchIO
+                    }
+
+                    val newVideo = video.copyHttpServer(port)
+                    videoUrl = newVideo.videoUrl
+                    viewModel.updateVideo(newVideo)
+                }
+
+                mpv.command(
+                    "loadfile",
+                    parseVideoUrl(videoUrl) ?: return@launchIO,
+                    "replace",
+                    "0",
+                    videoOptions,
+                )
+            }
         }
         updateDiscordRPC(exitingPlayer = false)
     }
@@ -1162,7 +1223,6 @@ class PlayerActivity : BaseActivity() {
             val preferredPort = torrentPreferences.torrServerPort().get().toIntOrNull() ?: 8090
             torrentServerApi.setPort(preferredPort)
         }
-
         // check if link is from localSource
         if (videoUrl.startsWith("content://")) {
             val videoInputStream = applicationContext.contentResolver.openInputStream(videoUrl.toUri())
@@ -1202,7 +1262,7 @@ class PlayerActivity : BaseActivity() {
         )
     }
 
-    private fun parseVideoUrl(videoUrl: String?): String? {
+    fun parseVideoUrl(videoUrl: String?): String? {
         return videoUrl?.toUri()?.resolveUri(this)
             ?: videoUrl
     }

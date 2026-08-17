@@ -91,6 +91,7 @@ import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.animesource.model.Hoster
 import eu.kanade.tachiyomi.animesource.model.Video
+import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.core.common.Constants
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.connections.discord.DiscordRPCService
@@ -99,6 +100,7 @@ import eu.kanade.tachiyomi.data.connections.discord.DiscordScreen
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadCache
 import eu.kanade.tachiyomi.data.download.manga.MangaDownloadCache
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
+import eu.kanade.tachiyomi.data.player.service.HttpServerService
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
 import eu.kanade.tachiyomi.data.updater.RELEASE_URL
 import eu.kanade.tachiyomi.extension.anime.api.AnimeExtensionApi
@@ -129,10 +131,12 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
 import mihon.core.migration.Migrator
 import mihon.feature.support.SupportUsScreen
@@ -140,9 +144,12 @@ import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.release.interactor.GetApplicationRelease
+import tachiyomi.domain.source.anime.service.AnimeSourceManager
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.util.collectAsState
@@ -150,7 +157,9 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import kotlin.time.times
 
@@ -819,14 +828,25 @@ class MainActivity : BaseActivity() {
             animeId: Long,
             episodeId: Long,
             extPlayer: Boolean,
+            sourceId: Long? = null,
             video: Video? = null,
             hosterIndex: Int = -1,
             videoIndex: Int = -1,
             hosterList: List<Hoster>? = null,
         ) {
             if (extPlayer) {
+                var extVideo = video
+                if (extVideo != null && extVideo.usesHttpServer()) {
+                    val sourceId = sourceId ?: (Injekt.get<GetAnime>().await(animeId)?.source ?: -1L)
+                    val (success, port) = startHttpServerService(context, sourceId)
+                    if (!success) {
+                        withUIContext { Injekt.get<Application>().toast(AYMR.strings.http_server_start_failure) }
+                        return
+                    }
+                    extVideo = extVideo.copyHttpServer(port)
+                }
                 val intent = try {
-                    ExternalIntents.newIntent(context, animeId, episodeId, video)
+                    ExternalIntents.newIntent(context, animeId, episodeId, extVideo)
                 } catch (e: Exception) {
                     logcat(LogPriority.ERROR, e)
                     withUIContext { Injekt.get<Application>().toast(e.message) }
@@ -845,6 +865,30 @@ class MainActivity : BaseActivity() {
                     ),
                 )
             }
+        }
+
+        suspend fun startHttpServerService(
+            context: Context,
+            sourceId: Long,
+            timeout: Duration = 5.seconds,
+        ): Pair<Boolean, Int> {
+            val sourceManager: AnimeSourceManager = Injekt.get()
+            val source = sourceManager.get(sourceId) as? AnimeHttpSource
+            if (source?.createHttpServer() == null) {
+                return Pair(false, 0)
+            }
+
+            HttpServerService.resetIsRunning()
+            context.startService(
+                Intent(context, HttpServerService::class.java)
+                    .putExtra(HttpServerService.EXTRA_SOURCE_ID, sourceId),
+            )
+
+            val ready = withTimeoutOrNull(timeout) {
+                HttpServerService.isRunning.first { it }
+            }
+
+            return Pair(ready == true, HttpServerService.port)
         }
     }
 }

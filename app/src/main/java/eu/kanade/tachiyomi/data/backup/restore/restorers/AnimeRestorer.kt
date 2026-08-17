@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupEpisode
 import tachiyomi.data.AnimeUpdateStrategyColumnAdapter
 import tachiyomi.data.CastColumnAdapter
 import tachiyomi.data.FetchTypeColumnAdapter
+import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.entries.anime.interactor.AnimeFetchInterval
@@ -161,6 +162,7 @@ class AnimeRestorer(
                 cast = anime.cast?.let(CastColumnAdapter::encode),
                 backgroundUrl = anime.backgroundUrl,
                 backgroundLastModified = anime.backgroundLastModified,
+                memo = anime.memo.let(MemoColumnAdapter::encode),
             )
         }
         return anime
@@ -181,37 +183,20 @@ class AnimeRestorer(
             .associateBy { it.url }
 
         val (existingEpisodes, newEpisodes) = backupEpisodes
-            .mapNotNull {
-                val episode = it.toEpisodeImpl().copy(animeId = anime.id)
+            .mapNotNull { backupEpisode ->
+                val episode = backupEpisode.toEpisodeImpl().copy(animeId = anime.id)
 
                 val dbEpisode = dbEpisodesByUrl[episode.url]
-                    ?: // New episode
-                    return@mapNotNull episode
 
-                if (episode.forComparison() == dbEpisode.forComparison()) {
+                when {
+                    dbEpisode == null -> episode
+
+                    // New episode
+                    episode.forComparison() == dbEpisode.forComparison() -> null
+
                     // Same state; skip
-                    return@mapNotNull null
+                    else -> updateEpisodeBasedOnSyncState(episode, dbEpisode)
                 }
-
-                // Update to an existing episode
-                var updatedEpisode = episode
-                    .copyFrom(dbEpisode)
-                    .copy(
-                        id = dbEpisode.id,
-                        bookmark = episode.bookmark || dbEpisode.bookmark,
-                        fillermark = episode.fillermark || dbEpisode.fillermark,
-                    )
-                if (dbEpisode.seen && !updatedEpisode.seen) {
-                    updatedEpisode = updatedEpisode.copy(
-                        seen = true,
-                        lastSecondSeen = dbEpisode.lastSecondSeen,
-                    )
-                } else if (updatedEpisode.lastSecondSeen == 0L && dbEpisode.lastSecondSeen != 0L) {
-                    updatedEpisode = updatedEpisode.copy(
-                        lastSecondSeen = dbEpisode.lastSecondSeen,
-                    )
-                }
-                updatedEpisode
             }
             .partition { it.id > 0 }
 
@@ -224,11 +209,16 @@ class AnimeRestorer(
             episode.copy(
                 id = dbEpisode.id,
                 bookmark = episode.bookmark || dbEpisode.bookmark,
+                fillermark = episode.fillermark || dbEpisode.fillermark,
                 seen = episode.seen,
                 lastSecondSeen = episode.lastSecondSeen,
             )
         } else {
-            episode.copyFrom(dbEpisode).let {
+            episode.copyFrom(dbEpisode).copy(
+                id = dbEpisode.id,
+                bookmark = episode.bookmark || dbEpisode.bookmark,
+                fillermark = episode.fillermark || dbEpisode.fillermark,
+            ).let {
                 when {
                     dbEpisode.seen && !it.seen -> it.copy(seen = true, lastSecondSeen = dbEpisode.lastSecondSeen)
 
@@ -266,6 +256,7 @@ class AnimeRestorer(
                     episode.previewUrl,
                     episode.fillermark,
                     episode.dateUploadOverride,
+                    episode.memo,
                 )
             }
         }
@@ -294,6 +285,7 @@ class AnimeRestorer(
                     version = episode.version,
                     isSyncing = 0,
                     dateUploadOverride = episode.dateUploadOverride,
+                    memo = episode.memo.let(MemoColumnAdapter::encode),
                 )
             }
         }
@@ -306,7 +298,7 @@ class AnimeRestorer(
      */
     private suspend fun insertAnime(anime: Anime): Long {
         return handler.awaitOneExecutable(true) {
-            animesQueries.insert(
+            animesQueries.insertReturningId(
                 source = anime.source,
                 url = anime.url,
                 artist = anime.artist,
@@ -336,6 +328,7 @@ class AnimeRestorer(
                 backgroundUrl = anime.backgroundUrl,
                 cast = anime.cast,
                 backgroundLastModified = anime.backgroundLastModified,
+                memo = anime.memo,
             )
         }
     }

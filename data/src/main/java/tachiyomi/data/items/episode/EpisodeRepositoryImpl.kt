@@ -2,8 +2,10 @@ package tachiyomi.data.items.episode
 
 import app.cash.sqldelight.async.coroutines.awaitAsOne
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.json.JsonObject
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.data.MemoColumnAdapter
 import tachiyomi.data.handlers.anime.AnimeDatabaseHandler
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.episode.model.EpisodeUpdate
@@ -17,7 +19,7 @@ class EpisodeRepositoryImpl(
         return try {
             handler.await(inTransaction = true) {
                 episodes.map { episode ->
-                    val lastInsertId = episodesQueries.insert(
+                    val lastInsertId = episodesQueries.insertReturningId(
                         episode.animeId,
                         episode.url,
                         episode.name,
@@ -35,6 +37,7 @@ class EpisodeRepositoryImpl(
                         episode.previewUrl,
                         episode.fillermark,
                         episode.dateUploadOverride,
+                        episode.memo,
                     ).awaitAsOne()
                     episode.copy(id = lastInsertId)
                 }
@@ -76,6 +79,7 @@ class EpisodeRepositoryImpl(
                     previewUrl = episodeUpdate.previewUrl,
                     fillermark = episodeUpdate.fillermark,
                     dateUploadOverride = episodeUpdate.dateUploadOverride,
+                    memo = episodeUpdate.memo?.let(MemoColumnAdapter::encode),
                 )
             }
         }
@@ -147,6 +151,7 @@ class EpisodeRepositoryImpl(
         previewUrl: String?,
         fillermark: Boolean,
         dateUploadOverride: Long,
+        memo: JsonObject,
     ): Episode = Episode(
         id = id,
         animeId = animeId,
@@ -167,5 +172,6 @@ class EpisodeRepositoryImpl(
         lastModifiedAt = lastModifiedAt,
         version = version,
         dateUploadOverride = dateUploadOverride,
+        memo = memo,
     )
 }

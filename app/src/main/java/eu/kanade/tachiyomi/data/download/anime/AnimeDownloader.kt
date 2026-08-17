@@ -17,6 +17,7 @@ import com.arthenica.ffmpegkit.LogRedirectionStrategy
 import com.arthenica.ffmpegkit.StatisticsCallback
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.animesource.UnmeteredSource
+import eu.kanade.tachiyomi.animesource.model.HttpServer
 import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
@@ -24,6 +25,7 @@ import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.data.torrent.service.TorrentServerService
+import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
 import eu.kanade.tachiyomi.ui.player.loader.HosterLoader
 import eu.kanade.tachiyomi.util.storage.DiskUtil
@@ -415,7 +417,7 @@ class AnimeDownloader(
         video.status = Video.State.LOAD_VIDEO
 
         var progressJob: Job? = null
-        var isExternal = false
+        var httpServer: HttpServer? = null
 
         // Get filename from download info
         val filename = DiskUtil.buildValidFilename(download.episode.name)
@@ -443,13 +445,30 @@ class AnimeDownloader(
                             }
                         }
 
+                        // Start and set http server if needed
+                        if (video.usesHttpServer()) {
+                            httpServer = download.source.createHttpServer()
+                            httpServer?.start()
+                            download.video = download.video?.copyHttpServer(httpServer?.listeningPort ?: 0)
+                        }
+
                         downloadVideo(download, tmpDir, filename)
                     } else {
-                        isExternal = true
+                        if (download.video!!.usesHttpServer()) {
+                            val (success, port) = MainActivity.startHttpServerService(context, download.source.id)
+                            if (!success) throw Exception("Failed to start server")
+                            download.video = download.video!!.copyHttpServer(port)
+                        }
+
                         val betterFileName = DiskUtil.buildValidFilename(
                             "${download.anime.title} - ${download.episode.name}",
                         )
-                        downloadVideoExternal(download.video!!, download.source, tmpDir, betterFileName)
+                        downloadVideoExternal(
+                            video = download.video!!,
+                            source = download.source,
+                            tmpDir = tmpDir,
+                            filename = betterFileName,
+                        )
                     }
                 }
             }
@@ -457,12 +476,10 @@ class AnimeDownloader(
             video.videoUrl = file.uri.path ?: ""
             download.progress = 100
             video.status = Video.State.READY
-            if (!isExternal) {
-                stopHttpServer(download)
-            }
+            httpServer?.stop()
             progressJob?.cancel()
         } catch (e: Exception) {
-            stopHttpServer(download)
+            httpServer?.stop()
             if (e is CancellationException) throw e
             video.status = Video.State.ERROR
             notifier.onError(e.message, download.episode.name, download.anime.title, download.anime.id)

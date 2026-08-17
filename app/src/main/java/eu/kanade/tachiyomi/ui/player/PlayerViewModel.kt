@@ -1602,14 +1602,19 @@ class PlayerViewModel @JvmOverloads constructor(
                     }.awaitAll()
 
                     if (hasFoundPreferredVideo.compareAndSet(false, true)) {
-                        val (hosterIdx, videoIdx) = HosterLoader.selectBestVideo(hosterState.value)
-                        if (hosterIdx == -1) {
-                            throw ExceptionWithStringResource("No available videos", AYMR.strings.no_available_videos)
+                        if (selectedHosterVideoIndex.value == Pair(-1, -1)) {
+                            val (hosterIdx, videoIdx) = HosterLoader.selectBestVideo(hosterState.value)
+                            if (hosterIdx == -1) {
+                                throw ExceptionWithStringResource(
+                                    "No available videos",
+                                    AYMR.strings.no_available_videos,
+                                )
+                            }
+
+                            val video = (hosterState.value[hosterIdx] as HosterState.Ready).videoList[videoIdx]
+
+                            loadVideo(source, video, hosterIdx, videoIdx)
                         }
-
-                        val video = (hosterState.value[hosterIdx] as HosterState.Ready).videoList[videoIdx]
-
-                        loadVideo(source, video, hosterIdx, videoIdx)
                     }
                 }
             } catch (e: CancellationException) {
@@ -1715,6 +1720,10 @@ class PlayerViewModel @JvmOverloads constructor(
 
         activity.setVideo(resolvedVideo)
         return true
+    }
+
+    fun updateVideo(video: Video) {
+        _currentVideo.update { _ -> video }
     }
 
     fun onVideoClicked(hosterIndex: Int, videoIndex: Int) {
