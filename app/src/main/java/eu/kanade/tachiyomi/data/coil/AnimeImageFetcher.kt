@@ -32,7 +32,6 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.entries.anime.model.AnimeCover
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
-import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.io.IOException
 
@@ -76,14 +75,20 @@ class AnimeImageFetcher(
         return when (getResourceType(resolvedUrl)) {
             Type.URL -> httpLoader()
 
-            Type.File -> File(resolvedUrl.substringAfter("file://"))
+            Type.File -> File(resolvedUrl.removePrefix("file://"))
                 .takeIf(File::exists)
                 ?.let(::fileLoader)
-                ?: emptyImageLoader()
+                ?: runCatching { uniFileLoader(resolvedUrl) }.getOrElse { emptyImageLoader() }
 
             Type.URI -> runCatching { uniFileLoader(resolvedUrl) }.getOrElse { emptyImageLoader() }
 
-            null -> emptyImageLoader()
+            null -> runCatching { uniFileLoader(resolvedUrl) }
+                .getOrElse {
+                    File(resolvedUrl)
+                        .takeIf(File::exists)
+                        ?.let(::fileLoader)
+                        ?: emptyImageLoader()
+                }
         }
     }
 
@@ -315,11 +320,10 @@ class AnimeImageFetcher(
 
     class AnimeFactory(
         private val callFactoryLazy: Lazy<Call.Factory>,
+        private val coverCache: AnimeCoverCache,
+        private val backgroundCache: AnimeBackgroundCache,
+        private val sourceManager: AnimeSourceManager,
     ) : Fetcher.Factory<Anime> {
-
-        private val coverCache: AnimeCoverCache by injectLazy()
-        private val backgroundCache: AnimeBackgroundCache by injectLazy()
-        private val sourceManager: AnimeSourceManager by injectLazy()
 
         override fun create(data: Anime, options: Options, imageLoader: ImageLoader): Fetcher {
             val isBackground = options.useBackground
@@ -353,10 +357,9 @@ class AnimeImageFetcher(
 
     class AnimeCoverFactory(
         private val callFactoryLazy: Lazy<Call.Factory>,
+        private val coverCache: AnimeCoverCache,
+        private val sourceManager: AnimeSourceManager,
     ) : Fetcher.Factory<AnimeCover> {
-
-        private val coverCache: AnimeCoverCache by injectLazy()
-        private val sourceManager: AnimeSourceManager by injectLazy()
 
         override fun create(data: AnimeCover, options: Options, imageLoader: ImageLoader): Fetcher {
             return AnimeImageFetcher(

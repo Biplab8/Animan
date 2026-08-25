@@ -2,6 +2,9 @@ package tachiyomi.source.local.image.anime
 
 import android.content.Context
 import com.hippo.unifile.UniFile
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import tachiyomi.core.common.storage.nameWithoutExtension
@@ -11,6 +14,8 @@ import java.io.InputStream
 
 private const val DEFAULT_BACKGROUND_NAME = "background.jpg"
 
+@Inject
+@SingleIn(AppScope::class)
 class LocalAnimeBackgroundManager(
     private val context: Context,
     private val fileSystem: LocalAnimeSourceFileSystem,
@@ -18,9 +23,14 @@ class LocalAnimeBackgroundManager(
 
     fun find(animeUrl: String): UniFile? {
         return fileSystem.getFilesInAnimeDirectory(animeUrl)
-            // Get all file whose names start with 'background'
-            .filter { it.isFile && it.nameWithoutExtension.equals("background", ignoreCase = true) }
-            // Get the first actual image
+            .filter { file ->
+                file.isFile && (
+                    file.nameWithoutExtension.equals("background", ignoreCase = true) ||
+                        file.nameWithoutExtension.equals("fanart", ignoreCase = true) ||
+                        file.nameWithoutExtension.equals("backdrop", ignoreCase = true) ||
+                        file.nameWithoutExtension.equals("banner", ignoreCase = true)
+                    )
+            }
             .firstOrNull { ImageUtil.isImage(it.name) { it.openInputStream() } }
     }
 

@@ -398,13 +398,11 @@ class EpisodeOptionsDialogScreenModel(
                     hosterName = h.hosterName,
                     hosterUrl = h.hosterUrl,
                     videoList = (hosterStateList[index] as HosterState.Ready).videoList,
+                    internalData = h.internalData,
+                    memo = h.memo,
                 )
             } else {
-                Hoster(
-                    hosterName = h.hosterName,
-                    hosterUrl = h.hosterUrl,
-                    videoList = h.videoList,
-                )
+                h
             }
         }
     }
@@ -772,9 +770,14 @@ private fun sendChaptersToCast(
             putString(MediaMetadata.KEY_SUBTITLE, episode)
             addImage(WebImage(Uri.parse(image)))
         }
+        val contentType = when {
+            videoUrl.contains(".m3u8") -> "application/x-mpegURL"
+            videoUrl.contains(".mpd") -> "application/dash+xml"
+            else -> "video/mp4"
+        }
         val mediaInfo = MediaInfo.Builder(videoUrl)
             .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
-            .setContentType("video/mp4")
+            .setContentType(contentType)
             .setMetadata(mediaMetadata)
             .build()
         val mediaQueueItem = MediaQueueItem.Builder(mediaInfo)

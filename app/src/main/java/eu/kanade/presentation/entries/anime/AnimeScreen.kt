@@ -96,13 +96,14 @@ import eu.kanade.tachiyomi.ui.browse.anime.extension.details.AnimeSourcePreferen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeSeasonItem
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeViewModel
 import eu.kanade.tachiyomi.ui.entries.anime.EpisodeList
-import eu.kanade.tachiyomi.ui.home.HomeScreen.uiPreferences
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.delay
+import mihon.app.di.appGraph
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.items.episode.service.missingEntriesCount
+import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.anime.model.StubAnimeSource
 import tachiyomi.i18n.MR
@@ -188,13 +189,16 @@ fun AnimeScreen(
     // Season clicked
     onSeasonClicked: (SeasonAnime) -> Unit,
     onContinueWatchingClicked: ((SeasonAnime) -> Unit)?,
+    // Related anime clicked
+    onRelatedAnimeClicked: (Anime) -> Unit,
+    onRelatedAnimeLongClicked: (Anime) -> Unit,
+    relatedAnimeDisplayMode: LibraryDisplayMode,
     // KMK -->
     getAnimeState: @Composable (Anime) -> State<Anime>,
     onRelatedAnimesScreenClick: () -> Unit,
     onRelatedAnimeClick: (Anime) -> Unit,
     onRelatedAnimeLongClick: (Anime) -> Unit,
     // KMK <--
-
 ) {
     val context = LocalContext.current
     val onCopyTagToClipboard: (tag: String) -> Unit = {
@@ -257,6 +261,9 @@ fun AnimeScreen(
             onSettingsClicked = onSettingsClicked,
             onSeasonClicked = onSeasonClicked,
             onClickContinueWatching = onContinueWatchingClicked,
+            onRelatedAnimeClicked = onRelatedAnimeClicked,
+            onRelatedAnimeLongClicked = onRelatedAnimeLongClicked,
+            relatedAnimeDisplayMode = relatedAnimeDisplayMode,
             // KMK -->
             getAnimeState = getAnimeState,
             onRelatedAnimesScreenClick = onRelatedAnimesScreenClick,
@@ -313,6 +320,9 @@ fun AnimeScreen(
             onSettingsClicked = onSettingsClicked,
             onSeasonClicked = onSeasonClicked,
             onClickContinueWatching = onContinueWatchingClicked,
+            onRelatedAnimeClicked = onRelatedAnimeClicked,
+            onRelatedAnimeLongClicked = onRelatedAnimeLongClicked,
+            relatedAnimeDisplayMode = relatedAnimeDisplayMode,
             // KMK -->
             getAnimeState = getAnimeState,
             onRelatedAnimesScreenClick = onRelatedAnimesScreenClick,
@@ -389,6 +399,10 @@ private fun AnimeScreenSmallImpl(
     // Season clicked
     onSeasonClicked: (SeasonAnime) -> Unit,
     onClickContinueWatching: ((SeasonAnime) -> Unit)?,
+    // Related anime clicked
+    onRelatedAnimeClicked: (Anime) -> Unit,
+    onRelatedAnimeLongClicked: (Anime) -> Unit,
+    relatedAnimeDisplayMode: LibraryDisplayMode,
     // KMK -->
     getAnimeState: @Composable ((Anime) -> State<Anime>),
     onRelatedAnimesScreenClick: () -> Unit,
@@ -428,11 +442,15 @@ private fun AnimeScreenSmallImpl(
         }
     })
 
-    val relatedAnimesEnabled by Injekt.get<SourcePreferences>().relatedAnimes.collectAsState()
+    val context = LocalContext.current
+    val uiPreferences = remember { context.appGraph.uiPreferences }
+    val sourcePreferences = remember { context.appGraph.sourcePreferences }
+    val libraryPreferences = remember { context.appGraph.libraryPreferences }
+    val relatedAnimesEnabled by sourcePreferences.relatedAnimes.collectAsState()
     val expandRelatedAnimes by uiPreferences.expandRelatedAnimes.collectAsState()
     val showRelatedAnimesInOverflow by uiPreferences.relatedAnimesInOverflow.collectAsState()
     val showEpisodeTimestamps by uiPreferences.showEpisodeTimestamps.collectAsState()
-    val hideMissingChapters by remember { Injekt.get<LibraryPreferences>() }.hideMissingChapters.collectAsState()
+    val hideMissingChapters by libraryPreferences.hideMissingChapters.collectAsState()
     val showCast by uiPreferences.showCast.collectAsState()
 
     BoxWithConstraints {
@@ -613,6 +631,10 @@ private fun AnimeScreenSmallImpl(
                             onTagSearch = onTagSearch,
                             onCopyTagToClipboard = onCopyTagToClipboard,
                             onEditNotes = onEditNotesClicked,
+                            relations = state.relatedAnime,
+                            onRelatedClick = onRelatedAnimeClicked,
+                            onRelatedLongClick = onRelatedAnimeLongClicked,
+                            relatedDisplayMode = relatedAnimeDisplayMode,
                             modifier = Modifier.ignorePadding(offsetGridPaddingPx),
                         )
                     }
@@ -859,11 +881,16 @@ fun AnimeScreenLargeImpl(
     // Season clicked
     onSeasonClicked: (SeasonAnime) -> Unit,
     onClickContinueWatching: ((SeasonAnime) -> Unit)?,
+    // Related anime clicked
+    onRelatedAnimeClicked: (Anime) -> Unit,
+    onRelatedAnimeLongClicked: (Anime) -> Unit,
+    relatedAnimeDisplayMode: LibraryDisplayMode,
     // KMK -->
     getAnimeState: @Composable ((Anime) -> State<Anime>),
     onRelatedAnimesScreenClick: () -> Unit,
     onRelatedAnimeClick: (Anime) -> Unit,
     onRelatedAnimeLongClick: (Anime) -> Unit,
+    // KMK <--
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
@@ -882,8 +909,12 @@ fun AnimeScreenLargeImpl(
     var topBarHeight by remember { mutableIntStateOf(0) }
     val offsetGridPaddingPx = with(density) { GRID_PADDING.roundToPx() }
     val gridSize = remember(state.anime) { state.anime.seasonDisplayGridSize }
+    val context = LocalContext.current
+    val uiPreferences = remember { context.appGraph.uiPreferences }
+    val sourcePreferences = remember { context.appGraph.sourcePreferences }
+    val libraryPreferences = remember { context.appGraph.libraryPreferences }
     val showEpisodeTimestamps by uiPreferences.showEpisodeTimestamps.collectAsState()
-    val hideMissingChapters by remember { Injekt.get<LibraryPreferences>() }.hideMissingChapters.collectAsState()
+    val hideMissingChapters by libraryPreferences.hideMissingChapters.collectAsState()
 
     val itemListState = rememberLazyGridState()
     val hasFilters = remember(state) {
@@ -900,7 +931,7 @@ fun AnimeScreenLargeImpl(
             navigateUp()
         }
     })
-    val relatedAnimesEnabled by Injekt.get<SourcePreferences>().relatedAnimes.collectAsState()
+    val relatedAnimesEnabled by sourcePreferences.relatedAnimes.collectAsState()
     val expandRelatedAnimes by uiPreferences.expandRelatedAnimes.collectAsState()
     val showRelatedAnimesInOverflow by uiPreferences.relatedAnimesInOverflow.collectAsState()
     val showCast by uiPreferences.showCast.collectAsState()
@@ -1049,6 +1080,10 @@ fun AnimeScreenLargeImpl(
                                 onTagSearch = onTagSearch,
                                 onCopyTagToClipboard = onCopyTagToClipboard,
                                 onEditNotes = onEditNotesClicked,
+                                relations = state.relatedAnime,
+                                onRelatedClick = onRelatedAnimeClicked,
+                                onRelatedLongClick = onRelatedAnimeLongClicked,
+                                relatedDisplayMode = relatedAnimeDisplayMode,
                             )
                             // Cast is shown below the genres/tags on large layout as well,
                             // but only when trackers are in use and there is cast data.
