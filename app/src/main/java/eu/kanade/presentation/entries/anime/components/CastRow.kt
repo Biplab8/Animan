@@ -244,18 +244,6 @@ fun CastRow(
                             overflow = TextOverflow.Ellipsis,
                             textAlign = TextAlign.Center,
                         )
-                    }
-                    if (!credit.roleType.isNullOrBlank()) {
-                        Text(
-                            text = credit.roleType ?: "",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = MaterialTheme.colorScheme.tertiary,
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(vertical = 2.dp),
-                        )
                     }else if (!credit.character.isNullOrBlank()) {
                         Text(
                             text = credit.character ?: "",
