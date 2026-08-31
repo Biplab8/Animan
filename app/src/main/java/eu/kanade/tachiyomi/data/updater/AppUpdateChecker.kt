@@ -37,9 +37,9 @@ class AppUpdateChecker(
 
 val GITHUB_REPO: String by lazy {
     if (isNightlyBuildType) {
-        "Animetailapp/animetail-preview"
+        "Biplab8/animan-preview"
     } else {
-        "Animetailapp/Animetail"
+        "Biplab8/Animan"
     }
 }
 
