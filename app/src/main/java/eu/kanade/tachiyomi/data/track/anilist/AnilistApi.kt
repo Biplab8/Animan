@@ -478,6 +478,7 @@ class AnilistApi(
                                     roleType = charRole,
                                 ),
                             )
+                        }
 
                         if (vaImage == null) {
                             vaImage = va?.image?.large
