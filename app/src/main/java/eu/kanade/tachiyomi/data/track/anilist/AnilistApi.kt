@@ -463,7 +463,7 @@ class AnilistApi(
                         }
 
                         val roleText = vaNames.joinToString(", ")
-                        val charRole = edge["role"]?.toString()?.trim('"')
+                        val charRole = edge?.role?.name ?: edge?.role?.rawValue
                         var finalImage: String? = charImage ?: vaImage
                         if (!finalImage.isNullOrBlank() && finalImage.startsWith("//")) {
                             finalImage = "https:$finalImage"
