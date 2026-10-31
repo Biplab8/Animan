@@ -468,6 +468,10 @@ class AnilistApi(
                         if (!finalImage.isNullOrBlank() && finalImage.startsWith("//")) {
                             finalImage = "https:$finalImage"
                         }
+                        if (vaImage == null) {
+                            vaImage = va?.image?.large
+
+                        }
                         if (!charName.isNullOrBlank()) {
                             credits.add(
                                 Credit(
@@ -478,29 +482,8 @@ class AnilistApi(
                                     roleType = charRole,
                                 ),
                             )
-                        }
-
-                        if (vaImage == null) {
-                            vaImage = va?.image?.large
-
-                        }
+                        } 
                     }
-                    val roleText = vaNames.joinToString(", ")
-                    var finalImage = charImage ?: vaImage
-                    if (!finalImage.isNullOrBlank() && finalImage.startsWith("//")) {
-                        finalImage = "https:$finalImage"
-                    }
-                    if (!charName.isNullOrBlank()) {
-                        credits.add(
-                            Credit(
-                                name = charName,
-                                role = roleText.ifBlank { null },
-                                character = charName,
-                                image_url = finalImage,
-                            ),
-                        )
-                    }
-                }
 
                 first.staff?.edges?.forEach { sedge ->
                     val srole = sedge?.role
