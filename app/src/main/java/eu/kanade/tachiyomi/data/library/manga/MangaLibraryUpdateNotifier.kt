@@ -202,7 +202,7 @@ class MangaLibraryUpdateNotifier(
                 }
             }
 
-            setSmallIcon(R.mipmap.animan_logo)
+            setSmallIcon(R.mipmap.ic_logo_monochrome)
             setLargeIcon(notificationBitmap)
 
             setGroup(Notifications.GROUP_NEW_CHAPTERS)
@@ -238,7 +238,7 @@ class MangaLibraryUpdateNotifier(
             setContentText(description)
             setStyle(NotificationCompat.BigTextStyle().bigText(description))
 
-            setSmallIcon(R.mipmap.animan_logo)
+            setSmallIcon(R.mipmap.ic_logo_monochrome)
 
             if (icon != null) {
                 setLargeIcon(icon)
