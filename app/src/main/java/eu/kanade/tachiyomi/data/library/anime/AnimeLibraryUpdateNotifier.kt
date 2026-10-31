@@ -220,7 +220,7 @@ class AnimeLibraryUpdateNotifier(
                 }
             }
 
-            setSmallIcon(R.mipmap.animan_logo)
+            setSmallIcon(R.mipmap.ic_logo_monochrome)
             setLargeIcon(notificationBitmap)
 
             setGroup(Notifications.GROUP_NEW_EPISODES)
