@@ -461,32 +461,13 @@ class AnilistApi(
                         if (!vaName.isNullOrBlank()) {
                             vaNames.add(if (!vaLang.isNullOrBlank()) "$vaName ($vaLang)" else vaName)
                         }
-
-                        val roleText = vaNames.joinToString(", ")
-                        val charRole = edge?.role?.name ?: edge?.role?.rawValue
-                        var finalImage: String? = charImage ?: vaImage
-                        if (!finalImage.isNullOrBlank() && finalImage.startsWith("//")) {
-                            finalImage = "https:$finalImage"
-                        }
-                        if (!charName.isNullOrBlank()) {
-                            credits.add(
-                                Credit(
-                                    name = charName,
-                                    role = roleText.ifBlank { null },
-                                    character = charName,
-                                    image_url = finalImage,
-                                    roleType = charRole,
-                                ),
-                            )
-                        }
-
                         if (vaImage == null) {
                             vaImage = va?.image?.large
-
                         }
                     }
                     val roleText = vaNames.joinToString(", ")
-                    var finalImage = charImage ?: vaImage
+                    val charRole = edge?.role?.name ?: edge?.role?.rawValue
+                    var finalImage: String? = charImage ?: vaImage
                     if (!finalImage.isNullOrBlank() && finalImage.startsWith("//")) {
                         finalImage = "https:$finalImage"
                     }
@@ -497,11 +478,11 @@ class AnilistApi(
                                 role = roleText.ifBlank { null },
                                 character = charName,
                                 image_url = finalImage,
+                                roleType = charRole,
                             ),
                         )
-                    }
+                    } 
                 }
-
                 first.staff?.edges?.forEach { sedge ->
                     val srole = sedge?.role
                     val sname = sedge?.node?.name?.userPreferred
