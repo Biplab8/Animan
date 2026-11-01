@@ -23,6 +23,7 @@ import android.os.Environment
 import android.util.AttributeSet
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
+import animetail.feature.mpvfiles.MpvConfig
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.player.controls.components.panels.toColorHexString
 import eu.kanade.tachiyomi.ui.player.settings.AdvancedPlayerPreferences
@@ -60,6 +61,11 @@ class AniyomiMPVView(context: Context, attributes: AttributeSet?) : BaseMPVView(
         mpv?.setOptionString(name, value)
     }
 
+    fun resetTrackSelection() {
+        setSafeOptionString("sid", "no")
+        setSafeOptionString("aid", "auto")
+    }
+
     /**
      * Returns the video aspect ratio. Rotation is taken into account.
      */
@@ -89,9 +95,8 @@ class AniyomiMPVView(context: Context, attributes: AttributeSet?) : BaseMPVView(
         setSafeOptionString("tls-verify", "no")
         setSafeOptionString("tls-ca-file", "${context.filesDir.path}/${PlayerActivity.MPV_DIR}/cacert.pem")
 
-        // We handle selecting this in the viewmodel
-        mpv?.setOptionString("sid", "no")
-        mpv?.setOptionString("aid", "no")
+        // Select audio during initial preload to avoid demux_lavf refresh seeks on HLS streams
+        resetTrackSelection()
 
         // Limit demuxer cache since the defaults are too high for mobile devices
         val cacheMegs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) 64 else 32
@@ -226,6 +231,10 @@ class AniyomiMPVView(context: Context, attributes: AttributeSet?) : BaseMPVView(
             "secondary-sub-delay",
             (subtitlePreferences.subtitlesSecondaryDelay().get() / 1000.0).toString(),
         )
+
+        val fontsDir = context.filesDir.resolve(PlayerActivity.MPV_DIR).resolve(MpvConfig.MPV_FONTS_DIR).path
+        setSafeOptionString("sub-fonts-dir", fontsDir)
+        setSafeOptionString("osd-fonts-dir", fontsDir)
 
         val font = subtitlePreferences.subtitleFont().get().let {
             if (it == "Sans Serif") "sans-serif" else it

@@ -39,6 +39,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
+import animetail.feature.mpvfiles.MpvConfig
 import dev.icerock.moko.resources.StringResource
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
@@ -207,8 +208,13 @@ class PlayerViewModel(
     val cachePath: String = context.cacheDir.path
 
     val mpv = MPV(context.applicationContext) {
+        val mpvDir = context.filesDir.resolve(PlayerActivity.MPV_DIR)
+        val fontsDir = mpvDir.resolve(MpvConfig.MPV_FONTS_DIR)
+        MpvConfig.setupFontsConf(context.applicationContext)
         it.setOptionString("config", "yes")
-        it.setOptionString("config-dir", context.filesDir.resolve(PlayerActivity.MPV_DIR).toString())
+        it.setOptionString("config-dir", mpvDir.toString())
+        it.setOptionString("sub-fonts-dir", fontsDir.toString())
+        it.setOptionString("osd-fonts-dir", fontsDir.toString())
         it.setOptionString("gpu-shader-cache-dir", cachePath)
         it.setOptionString("icc-cache-dir", cachePath)
         it.setOptionString("keep-open", "yes")
@@ -457,28 +463,7 @@ class PlayerViewModel(
     fun loadTracks() {
         trackLoadingJob?.cancel()
         trackLoadingJob = viewModelScope.launch {
-            val possibleTrackTypes = listOf("audio", "sub")
-            val subTracks = mutableListOf<VideoTrack>()
-            val audioTracks = mutableListOf(
-                VideoTrack(-1, context.stringResource(MR.strings.off), null),
-            )
-            try {
-                val tracksCount = mpv.getPropertyInt("track-list/count") ?: 0
-                for (i in 0..<tracksCount) {
-                    val type = getTrackType(i)
-                    if (!possibleTrackTypes.contains(type) || type == null) continue
-                    when (type) {
-                        "sub" -> subTracks.add(VideoTrack(getTrackMPVId(i), getTrackTitle(i), getTrackLanguage(i)))
-                        "audio" -> audioTracks.add(VideoTrack(getTrackMPVId(i), getTrackTitle(i), getTrackLanguage(i)))
-                        else -> error("Unrecognized track type")
-                    }
-                }
-            } catch (e: NullPointerException) {
-                logcat(LogPriority.ERROR) { "Couldn't load tracks, probably cause mpv was destroyed" }
-                return@launch
-            }
-            _subtitleTracks.update { subTracks }
-            _audioTracks.update { audioTracks }
+            if (!populateTracks()) return@launch
 
             if (!isLoadingTracks.value) {
                 onFinishLoadingTracks()
@@ -486,20 +471,56 @@ class PlayerViewModel(
         }
     }
 
+    private fun populateTracks(): Boolean {
+        val possibleTrackTypes = listOf("audio", "sub")
+        val subTracks = mutableListOf<VideoTrack>()
+        val audioTracks = mutableListOf(
+            VideoTrack(-1, context.stringResource(MR.strings.off), null),
+        )
+        try {
+            val tracksCount = mpv.getPropertyInt("track-list/count") ?: 0
+            for (i in 0..<tracksCount) {
+                val type = getTrackType(i)
+                if (!possibleTrackTypes.contains(type) || type == null) continue
+                when (type) {
+                    "sub" -> subTracks.add(VideoTrack(getTrackMPVId(i), getTrackTitle(i), getTrackLanguage(i)))
+                    "audio" -> audioTracks.add(VideoTrack(getTrackMPVId(i), getTrackTitle(i), getTrackLanguage(i)))
+                    else -> error("Unrecognized track type")
+                }
+            }
+        } catch (e: NullPointerException) {
+            logcat(LogPriority.ERROR) { "Couldn't load tracks, probably cause mpv was destroyed" }
+            return false
+        }
+        _subtitleTracks.update { subTracks }
+        _audioTracks.update { audioTracks }
+        return true
+    }
+
     /**
      * When all subtitle/audio tracks are loaded, select the preferred one based on preferences,
      * or select the first one in the list if trackSelect fails.
      */
     fun onFinishLoadingTracks() {
+        if (!populateTracks()) return
+
         val preferredSubtitle = trackSelect.getPreferredTrackIndex(subtitleTracks.value)
         (preferredSubtitle ?: subtitleTracks.value.firstOrNull())?.let {
-            mpv.setPropertyInt("sid", it.id)
+            if (mpv.getPropertyInt("sid") != it.id) {
+                mpv.setPropertyInt("sid", it.id)
+            } else {
+                updateSubtitle(it.id, selectedSubtitles.value.second)
+            }
             mpv.setPropertyBoolean("secondary-sid", false)
         }
 
         val preferredAudio = trackSelect.getPreferredTrackIndex(audioTracks.value, subtitle = false)
         (preferredAudio ?: audioTracks.value.getOrNull(1))?.let {
-            mpv.setPropertyInt("aid", it.id)
+            if (mpv.getPropertyInt("aid") != it.id) {
+                mpv.setPropertyInt("aid", it.id)
+            } else {
+                updateAudio(it.id)
+            }
         }
 
         isLoadingTracks.update { _ -> true }
