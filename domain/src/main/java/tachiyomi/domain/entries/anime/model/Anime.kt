@@ -95,6 +95,9 @@ data class Anime(
     val unseenFilterRaw: Long
         get() = episodeFlags and EPISODE_UNSEEN_MASK
 
+    val mainEpisodeFilterRaw: Long
+        get() = episodeFlags and EPISODE_MAIN_MASK
+
     val downloadedFilterRaw: Long
         get() = episodeFlags and EPISODE_DOWNLOADED_MASK
 
@@ -120,6 +123,13 @@ data class Anime(
         get() = when (unseenFilterRaw) {
             EPISODE_SHOW_UNSEEN -> TriState.ENABLED_IS
             EPISODE_SHOW_SEEN -> TriState.ENABLED_NOT
+            else -> TriState.DISABLED
+        }
+
+    val mainEpisodeFilter: TriState
+        get() = when (mainEpisodeFilterRaw) {
+            EPISODE_SHOW_MAIN -> TriState.ENABLED_IS
+            EPISODE_SHOW_SUB -> TriState.ENABLED_NOT
             else -> TriState.DISABLED
         }
 
@@ -257,6 +267,10 @@ data class Anime(
         const val EPISODE_SHOW_UNSEEN = 0x00000002L
         const val EPISODE_SHOW_SEEN = 0x00000004L
         const val EPISODE_UNSEEN_MASK = 0x00000006L
+
+        const val EPISODE_SHOW_MAIN = 0x00000400L
+        const val EPISODE_SHOW_SUB = 0x00000800L
+        const val EPISODE_MAIN_MASK = 0x00000C00L
 
         const val EPISODE_SHOW_DOWNLOADED = 0x00000008L
         const val EPISODE_SHOW_NOT_DOWNLOADED = 0x00000010L
