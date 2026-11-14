@@ -105,6 +105,8 @@ fun ChapterSettingsDialog(
                             .takeUnless { downloadedOnly },
                         unreadFilter = manga?.unreadFilter ?: TriState.DISABLED,
                         onUnreadFilterChanged = onUnreadFilterChanged,
+                        mainChapterFilter = manga?.mainChapterFilter ?: TriState.DISABLED,
+                        onMainChapterFilterClicked = { viewModel.setMainChapterFilter(it) },
                         bookmarkedFilter = manga?.bookmarkedFilter ?: TriState.DISABLED,
                         onBookmarkedFilterChanged = onBookmarkedFilterChanged,
                         scanlatorFilterActive = scanlatorFilterActive,
@@ -137,6 +139,8 @@ private fun ColumnScope.FilterPage(
     onDownloadFilterChanged: ((TriState) -> Unit)?,
     unreadFilter: TriState,
     onUnreadFilterChanged: (TriState) -> Unit,
+    mainChapterFilter: TriState,
+    onMainChapterFilterClicked: (TriState) -> Unit,
     bookmarkedFilter: TriState,
     onBookmarkedFilterChanged: (TriState) -> Unit,
     scanlatorFilterActive: Boolean,
@@ -151,6 +155,11 @@ private fun ColumnScope.FilterPage(
         label = stringResource(MR.strings.action_filter_unread),
         state = unreadFilter,
         onClick = onUnreadFilterChanged,
+    )
+    TriStateItem(
+        label = "Main Chapters Only",
+        state = mainChapterFilter,
+        onClick = onMainChapterFilterClicked,
     )
     TriStateItem(
         label = stringResource(MR.strings.action_filter_bookmarked),
