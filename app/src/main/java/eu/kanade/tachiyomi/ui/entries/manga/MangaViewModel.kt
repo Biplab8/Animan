@@ -1182,6 +1182,20 @@ class MangaViewModel(
         }
     }
 
+    fun setMainChapterFilter(state: TriState) {
+        val manga = manga ?: return
+        
+        val flag = when (state) {
+            TriState.DISABLED -> Manga.SHOW_ALL
+            TriState.ENABLED_IS -> Manga.CHAPTER_SHOW_MAIN
+            TriState.ENABLED_NOT -> Manga.CHAPTER_SHOW_SUB
+        }
+        coroutineScope.launchNonCancellable {
+            val newFlags = manga.chapterFlags and Manga.CHAPTER_MAIN_MASK.inv() or flag
+            updateManga.awaitUpdateChapterFlags(manga.id, newFlags)
+        }
+    }
+
     /**
      * Sets the download filter and requests an UI update.
      * @param state whether to display only downloaded chapters or all chapters.
