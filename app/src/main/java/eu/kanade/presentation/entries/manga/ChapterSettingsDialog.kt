@@ -106,7 +106,7 @@ fun ChapterSettingsDialog(
                         unreadFilter = manga?.unreadFilter ?: TriState.DISABLED,
                         onUnreadFilterChanged = onUnreadFilterChanged,
                         mainChapterFilter = manga?.mainChapterFilter ?: TriState.DISABLED,
-                        onMainChapterFilterClicked = { viewModel.setMainChapterFilter(it) },
+                        onMainChapterFilterClicked = onMainChapterFilterClicked,
                         bookmarkedFilter = manga?.bookmarkedFilter ?: TriState.DISABLED,
                         onBookmarkedFilterChanged = onBookmarkedFilterChanged,
                         scanlatorFilterActive = scanlatorFilterActive,
