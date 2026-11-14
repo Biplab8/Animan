@@ -91,6 +91,9 @@ data class Manga(
     val unreadFilterRaw: Long
         get() = chapterFlags and CHAPTER_UNREAD_MASK
 
+    val mainChapterFilterRaw: Long
+        get() = chapterFlags and CHAPTER_MAIN_MASK
+
     val downloadedFilterRaw: Long
         get() = chapterFlags and CHAPTER_DOWNLOADED_MASK
 
@@ -101,6 +104,13 @@ data class Manga(
         get() = when (unreadFilterRaw) {
             CHAPTER_SHOW_UNREAD -> TriState.ENABLED_IS
             CHAPTER_SHOW_READ -> TriState.ENABLED_NOT
+            else -> TriState.DISABLED
+        }
+
+     val mainChapterFilter: TriState
+        get() = when (mainChapterFilterRaw) {
+            CHAPTER_SHOW_MAIN -> TriState.ENABLED_IS
+            CHAPTER_SHOW_SUB -> TriState.ENABLED_NOT
             else -> TriState.DISABLED
         }
 
@@ -126,6 +136,10 @@ data class Manga(
         const val CHAPTER_SHOW_UNREAD = 0x00000002L
         const val CHAPTER_SHOW_READ = 0x00000004L
         const val CHAPTER_UNREAD_MASK = 0x00000006L
+
+        const val CHAPTER_SHOW_MAIN = 0x00000400L
+        const val CHAPTER_SHOW_SUB = 0x00000800L
+        const val CHAPTER_MAIN_MASK = 0x00000C00L
 
         const val CHAPTER_SHOW_DOWNLOADED = 0x00000008L
         const val CHAPTER_SHOW_NOT_DOWNLOADED = 0x00000010L
